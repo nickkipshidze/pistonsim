@@ -28,9 +28,10 @@ const int BLOCK_ID_SWITCH = 0x05;
 
 const int BLOCK_ID_REPEATER = 0x06;
 // .data: electric charge
-// .state: 0b1000_0100 |
+// .state: 0b1000_0100_0010 |
 //     1000 | rotation top/right/bottom/left
 //     0100 | delay tick amount number
+//     0010 | ticks passed since powered
 
 struct Block;
 
@@ -52,6 +53,13 @@ int getBitRange(int byte, int startIndex, int endIndex) {
         result = (result << 1) | getBit(byte, i);
     }
     return result;
+}
+
+int setBitRange(int byte, int startIndex, int endIndex, int value) {
+    for (int i = endIndex; i <= startIndex; i++) {
+        byte = setBit(byte, i, getBit(value, i - endIndex));
+    }
+    return byte;
 }
 
 void setBlock(struct Block *world, int x, int y, struct Block block) {
