@@ -90,8 +90,8 @@ void drawBlock(struct Block block, int x, int y) {
         Color color = (Color){110, 0, 0, 255};
         if (block.active == true) color = (Color){255, 0, 0, 255};
 
-        int rotation = getBitRange(block.state, 7, 4);
-        int delay = getBitRange(block.state, 3, 0);
+        int rotation = getBitRange(block.state, 11, 8);
+        int delay = getBitRange(block.state, 7, 4);
 
         Rectangle slitRect = (Rectangle){x+23, y+25, WRLDTileSize-47, WRLDTileSize-31};
         Rectangle ind1Rect = (Rectangle){x+23, y+5, WRLDTileSize-47, WRLDTileSize-47};
