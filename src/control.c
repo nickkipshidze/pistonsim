@@ -11,7 +11,7 @@ struct Block HOTBAR_BLOCKS[9] = {
     (struct Block){3, 0, 15, true},
     (struct Block){4, 0, 0, false},
     (struct Block){5, 0, 0, false},
-    (struct Block){6, 0, 0b10000001, false},
+    (struct Block){6, 9, 0b100000010000, false},
     (struct Block){0},
     (struct Block){0},
     (struct Block){0},
@@ -74,18 +74,20 @@ void getInteractionInput(struct Block *world, Camera2D camera) {
             if (world[hoveridx].blockId == BLOCK_ID_AIR)
                 world[hoveridx] = HOTBAR_BLOCKS[HOTBAR_SELECTED];
             else if (world[hoveridx].blockId == BLOCK_ID_REPEATER && IsKeyDown(KEY_LEFT_SHIFT)) {
-                if (getBit(world[hoveridx].state, 7)) {
-                    world[hoveridx].state = setBit(world[hoveridx].state, 7, 0); world[hoveridx].state = setBit(world[hoveridx].state, 6, 1);
-                } else if (getBit(world[hoveridx].state, 6)) {
-                    world[hoveridx].state = setBit(world[hoveridx].state, 6, 0); world[hoveridx].state = setBit(world[hoveridx].state, 5, 1);
-                } else if (getBit(world[hoveridx].state, 5)) {
-                    world[hoveridx].state = setBit(world[hoveridx].state, 5, 0); world[hoveridx].state = setBit(world[hoveridx].state, 4, 1);
-                } else if (getBit(world[hoveridx].state, 4)) {
-                    world[hoveridx].state = setBit(world[hoveridx].state, 4, 0); world[hoveridx].state = setBit(world[hoveridx].state, 7, 1);
+                if (getBit(world[hoveridx].state, 11)) {
+                    world[hoveridx].state = setBit(world[hoveridx].state, 11, 0); world[hoveridx].state = setBit(world[hoveridx].state, 10, 1);
+                } else if (getBit(world[hoveridx].state, 10)) {
+                    world[hoveridx].state = setBit(world[hoveridx].state, 10, 0); world[hoveridx].state = setBit(world[hoveridx].state, 9, 1);
+                } else if (getBit(world[hoveridx].state, 9)) {
+                    world[hoveridx].state = setBit(world[hoveridx].state, 9, 0); world[hoveridx].state = setBit(world[hoveridx].state, 8, 1);
+                } else if (getBit(world[hoveridx].state, 8)) {
+                    world[hoveridx].state = setBit(world[hoveridx].state, 8, 0); world[hoveridx].state = setBit(world[hoveridx].state, 11, 1);
                 } 
             } else {
-                if (world[hoveridx].blockId == BLOCK_ID_SWITCH)
+                if (world[hoveridx].blockId == BLOCK_ID_SWITCH) {
                     world[hoveridx].active = !world[hoveridx].active;
+                    world[hoveridx].data = 0;
+                }
             }
         else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             world[hoveridx] = (struct Block){BLOCK_ID_AIR};
