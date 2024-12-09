@@ -19,6 +19,7 @@ struct Block {
 int getBit(int byte, int index);
 int setBit(int byte, int index, int value);
 int getBitRange(int byte, int startIndex, int endIndex);
+int setBitRange(int byte, int startIndex, int endIndex, int value);
 void setBlock(struct Block *world, int x, int y, struct Block block);
 struct Block *getBlock(struct Block *world, int x, int y);
 int getBlockId(struct Block *world, int x, int y);
