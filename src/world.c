@@ -4,6 +4,7 @@
 #include "world.h"
 #include "block.h"
 #include "draw.h"
+#include "control.h"
 
 int WRLDWidth = 128;
 int WRLDHeight = 128;
@@ -46,14 +47,23 @@ void tickWorld(struct Block *world) {
         for (int x = 0; x < WRLDWidth; x++) {
             struct Block *target = getBlock(world, x, y);
 
-            if (target -> blockId == BLOCK_ID_WIRE) {
+            if (target -> blockId == BLOCK_ID_WIRE || target -> blockId == BLOCK_ID_WALL || target -> blockId == BLOCK_ID_LAMP || target -> blockId == BLOCK_ID_SWITCH) {
                 int maxSupply = -1;
                 unsigned int connDirs = 0b0000;
 
                 for (int i = 0; i < 4; i++) {
                     if (
-                        (getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_POWER ||
-                        getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_WIRE) &&
+                        (
+                            getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_POWER ||
+                            getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_WIRE ||
+                            (
+                                getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_WALL && target -> blockId != BLOCK_ID_WALL
+                            ) || (
+                                getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_LAMP && target -> blockId != BLOCK_ID_LAMP
+                            ) || (
+                                getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_SWITCH
+                            )
+                        ) &&
                         getBlock(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) -> active == true &&
                         getBlock(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) -> data > 1
                     ) {
@@ -65,22 +75,25 @@ void tickWorld(struct Block *world) {
                     
                     if (
                         getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_POWER ||
-                        getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_WIRE
+                        getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_WIRE ||
+                        getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_WALL ||
+                        getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_LAMP ||
+                        getBlockId(worldCpy, x+dirOfs[i][0], y+dirOfs[i][1]) == BLOCK_ID_SWITCH
                     ) {
-                        connDirs |= (1 << (3 - i));
+                        connDirs = setBit(connDirs, 3 - i, 1);
                     }
                 }
 
                 target -> state = connDirs;
 
                 if (target -> active == false && maxSupply != -1) {
-                    target -> active = true;
+                    if (target -> blockId != BLOCK_ID_SWITCH) target -> active = true;
                     target -> data = maxSupply - 1;
                 }
 
                 if (target -> active == true) {
                     if (maxSupply == -1) {
-                        target -> active = false;
+                        if (target -> blockId != BLOCK_ID_SWITCH) target -> active = false;
                         target -> data = 0;
                     } else if (target -> data != maxSupply - 1) {
                         target -> data = maxSupply - 1;
@@ -94,15 +107,6 @@ void tickWorld(struct Block *world) {
 }
 
 void updateWorld(struct Block *world, Camera2D camera) {
-    int hoveridx = getWorldHoverIdx(camera);
-    if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-        if (hoveridx != -1)
-            world[hoveridx] = HOTBAR_BLOCKS[HOTBAR_SELECTED];
-    } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        if (hoveridx != -1)
-            world[hoveridx] = (struct Block){BLOCK_ID_AIR};
-    }
-
     if (IsKeyPressed(KEY_F3)) DEBUG_MODE = !DEBUG_MODE;
 
     if (DEBUG_MODE) {
@@ -121,26 +125,5 @@ void updateWorld(struct Block *world, Camera2D camera) {
     }
 
     drawWorld(world, camera);
-
-    if (hoveridx != -1)
-        DrawRectangle(
-            (hoveridx % WRLDWidth) * WRLDTileSize,
-            (hoveridx / WRLDWidth) * WRLDTileSize,
-            WRLDTileSize, WRLDTileSize, (Color){255, 255, 255, 32}
-        );
 }
 
-int getWorldHoverIdx(Camera2D camera) {
-    float relMouseX = GetMousePosition().x;
-    float relMouseY = GetMousePosition().y;
-    
-    Vector2 mouseWorldPos = GetScreenToWorld2D((Vector2){relMouseX, relMouseY}, camera);
-    
-    int mouseX = (int)(mouseWorldPos.x / WRLDTileSize);
-    int mouseY = (int)(mouseWorldPos.y / WRLDTileSize);
-    
-    if (mouseX >= 0 && mouseX < WRLDWidth && mouseY >= 0 && mouseY < WRLDHeight)
-        return (mouseY * WRLDWidth) + mouseX;
-    else
-        return -1;
-}
