@@ -3,10 +3,56 @@
 #include "world.h"
 
 const int BLOCK_ID_AIR = 0x00;
-const int BLOCK_ID_POWER = 0x01;
-const int BLOCK_ID_WIRE = 0x02;
+// .data: NOT USED
+// .state: NOT USED
+
+const int BLOCK_ID_WALL = 0x01;
+// .data: electric charge
+// .state: NOT USED
+
+const int BLOCK_ID_POWER = 0x02;
+// .data: electric charge
+// .state: NOT USED
+
+const int BLOCK_ID_WIRE = 0x03;
+// .data: electric charge
+// .state: 0b0000 | connections top/right/bottom/left
+
+const int BLOCK_ID_LAMP = 0x04;
+// .data: electric charge
+// .state: NOT USED
+
+const int BLOCK_ID_SWITCH = 0x05;
+// .data: electric charge
+// .state: NOT USED
+
+const int BLOCK_ID_REPEATER = 0x06;
+// .data: electric charge
+// .state: 0b1000_0100 |
+//     1000 | rotation top/right/bottom/left
+//     0100 | delay tick amount number
 
 struct Block;
+
+int getBit(int byte, int index) {
+    return (byte >> index) & 1;
+}
+
+int setBit(int byte, int index, int value) {
+    if (value) {
+        return byte | (1 << index);
+    } else {
+        return byte & ~(1 << index);
+    }
+}
+
+int getBitRange(int byte, int startIndex, int endIndex) {
+    int result = 0;
+    for (int i = startIndex; i >= endIndex; i--) {
+        result = (result << 1) | getBit(byte, i);
+    }
+    return result;
+}
 
 void setBlock(struct Block *world, int x, int y, struct Block block) {
     world[y*WRLDWidth+x] = block;
