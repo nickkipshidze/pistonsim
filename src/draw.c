@@ -4,22 +4,10 @@
 
 #include "block.h"
 #include "world.h"
+#include "control.h"
 
 int WINDOW_WIDTH = 1024;
 int WINDOW_HEIGHT = 512;
-
-int HOTBAR_SELECTED = 4;
-struct Block HOTBAR_BLOCKS[9] = {
-    (struct Block){1, 9, 0, true},
-    (struct Block){2, 0, 15, true},
-    (struct Block){0},
-    (struct Block){0},
-    (struct Block){0},
-    (struct Block){0},
-    (struct Block){0},
-    (struct Block){0},
-    (struct Block){0},
-};
 
 bool DEBUG_MODE = false;
 
@@ -29,22 +17,111 @@ void drawBlock(struct Block block, int x, int y) {
             (Rectangle){x, y, WRLDTileSize, WRLDTileSize},
             0.2, 9, (Color){245, 28, 28, 255}
         );
+    } else if (block.blockId == BLOCK_ID_WALL) {
+        DrawRectangleRounded(
+            (Rectangle){x, y, WRLDTileSize, WRLDTileSize},
+            0.2, 9, (Color){193, 193, 193, 255}
+        );
     } else if (block.blockId == BLOCK_ID_WIRE) {
         Color color = (Color){52, 19, 19, 255};
         if (block.active == true)
             color = (Color){52 + (12 * block.data), 26, 26, 255};
         
         unsigned int state = block.state;
-        if (((state >> 3) & 1) == 1)
+        if (getBit(state, 3))
             DrawRectangle(x+22, y, 19, 41, color);
-        if (((state >> 2) & 1) == 1)
+        if (getBit(state, 2))
             DrawRectangle(x+22, y+22, 42, 19, color);
-        if (((state >> 1) & 1) == 1)
+        if (getBit(state, 1))
             DrawRectangle(x+22, y+22, 19, 42, color);
-        if (((state >> 0) & 1) == 1)
+        if (getBit(state, 0))
             DrawRectangle(x, y+22, 41, 19, color);
         if (state == 0)
             DrawRectangle(x+22, y+22, 19, 19, color);
+    } else if (block.blockId == BLOCK_ID_LAMP) {
+        Color primary = (Color){104, 80, 48, 255};
+        Color secondary = (Color){104, 80, 48, 255};;
+        if (block.active == true) {
+            primary = (Color){227, 177, 109, 255};
+            secondary = (Color){231, 204, 169, 255};
+        }
+
+        DrawRectangleRounded(
+            (Rectangle){x, y, WRLDTileSize, WRLDTileSize},
+            0.4, 9, (Color){58, 32, 21, 255}
+        );
+        DrawRectangleRounded(
+            (Rectangle){x+6, y+6, WRLDTileSize-12, WRLDTileSize-12},
+            0.4, 9, primary
+        );
+        DrawRectangleRounded(
+            (Rectangle){x+17, y+17, WRLDTileSize-34, WRLDTileSize-34},
+            0.9, 9, (Color){139, 98, 46, 255}
+        );
+        DrawRectangleRounded(
+            (Rectangle){x+21, y+21, WRLDTileSize-42, WRLDTileSize-42},
+            0.9, 9, secondary
+        );
+    } else if (block.blockId == BLOCK_ID_SWITCH) {
+        DrawRectangleRounded(
+            (Rectangle){x, y, WRLDTileSize, WRLDTileSize},
+            0.4, 9, (Color){56, 56, 56, 255}
+        );
+        DrawRectangleRounded(
+            (Rectangle){x+6, y+6, WRLDTileSize-12, WRLDTileSize-12},
+            0.4, 9, (Color){140, 140, 140, 255}
+        );
+        DrawRectangleRounded(
+            (Rectangle){x+21, y+9, WRLDTileSize-42, WRLDTileSize-18},
+            0.4, 9, (Color){53, 26, 26, 255}
+        );
+
+        if (block.active == true)
+            DrawRectangleRounded(
+                (Rectangle){x+21, y+9, WRLDTileSize-42, WRLDTileSize-42},
+                0.4, 9, (Color){255, 0, 0, 255}
+            );
+        else
+            DrawRectangleRounded(
+                (Rectangle){x+21, y+34, WRLDTileSize-42, WRLDTileSize-42},
+                0.4, 9, (Color){110, 0, 0, 255}
+            );
+    } else if (block.blockId == BLOCK_ID_REPEATER) {
+        Color color = (Color){110, 0, 0, 255};
+        if (block.active == true) color = (Color){255, 0, 0, 255};
+
+        int rotation = getBitRange(block.state, 7, 4);
+        int delay = getBitRange(block.state, 3, 0);
+
+        Rectangle slitRect = (Rectangle){x+23, y+25, WRLDTileSize-47, WRLDTileSize-31};
+        Rectangle ind1Rect = (Rectangle){x+23, y+5, WRLDTileSize-47, WRLDTileSize-47};
+        Rectangle ind2Rect = (Rectangle){x+23, y+25, WRLDTileSize-47, WRLDTileSize-47};
+
+        if (getBit(rotation, 2)) {
+            slitRect = (Rectangle){x+7, y+25, WRLDTileSize-31, WRLDTileSize-47};
+            ind1Rect.x = x + 42; ind1Rect.y = y + 25;
+            ind2Rect.x = x + 23; ind2Rect.y = y + 25;
+        } else if (getBit(rotation, 1)) {
+            slitRect = (Rectangle){x+23, y+6, WRLDTileSize-47, WRLDTileSize-31};
+            ind1Rect.x = x + 23; ind1Rect.y = y + 42;
+            ind2Rect.x = x + 23; ind2Rect.y = y + 22;
+        } else if (getBit(rotation, 0)) {
+            slitRect = (Rectangle){x+25, y+25, WRLDTileSize-31, WRLDTileSize-47};
+            ind1Rect.x = x + 5; ind1Rect.y = y + 25;
+            ind2Rect.x = x + 25; ind2Rect.y = y + 25;
+        }
+
+        DrawRectangleRounded(
+            (Rectangle){x, y, WRLDTileSize, WRLDTileSize},
+            0.4, 9, (Color){56, 56, 56, 255}
+        );
+        DrawRectangleRounded(
+            (Rectangle){x+3, y+3, WRLDTileSize-6, WRLDTileSize-6},
+            0.4, 9, (Color){140, 140, 140, 255}
+        );
+        DrawRectangleRounded(slitRect, 0.4, 9, (Color){53, 26, 26, 255});
+        DrawRectangleRounded(ind1Rect, 0.4, 9, color);
+        DrawRectangleRounded(ind2Rect, 0.4, 9, color);
     }
 
     if (DEBUG_MODE) {
@@ -64,6 +141,14 @@ void drawWorld(struct Block *world, Camera2D camera) {
                 drawBlock(world[y*WRLDWidth+x], x*WRLDTileSize, y*WRLDTileSize);
         }
     }
+
+    int hoveridx = getWorldHoverIdx(camera);
+    if (hoveridx != -1)
+        DrawRectangle(
+            (hoveridx % WRLDWidth) * WRLDTileSize,
+            (hoveridx / WRLDWidth) * WRLDTileSize,
+            WRLDTileSize, WRLDTileSize, (Color){255, 255, 255, 32}
+        );
 }
 
 void drawBgGrid(int x1, int y1, int x2, int y2, Color color) {
@@ -84,17 +169,6 @@ void drawHotbarUI() {
 
     int bgX = WINDOW_WIDTH/2 - bgWidth/2;
     int bgY = WINDOW_HEIGHT - bgHeight - 20;
-
-    DrawRectangleRounded(
-        (Rectangle){bgX, bgY, bgWidth, bgHeight},
-        0.2, 9, (Color){64, 64, 64, 128}
-    );
-
-    int numkeys[9] = {KEY_ONE, KEY_TWO, KEY_THREE, KEY_FOUR, KEY_FIVE, KEY_SIX, KEY_SEVEN, KEY_EIGHT, KEY_NINE};
-    for (int i = 0; i < 9; i++) {
-        if (IsKeyPressed(numkeys[i]))
-            HOTBAR_SELECTED = i;
-    }
 
     for (int i = 0; i < cellCount; i++) {
         if (HOTBAR_SELECTED == i) {
@@ -121,6 +195,48 @@ void drawHotbarUI() {
                 HOTBAR_BLOCKS[i],
                 bgX + (i * cellSize) + (i * cellMargin) + cellMargin + cellPadding,
                 bgY + cellMargin + cellPadding
+            );
+        }
+    }
+}
+
+void drawVHotbarUI() {
+    int cellCount = 9;
+    int cellMargin = 10;
+    int cellPadding = 5;
+    int cellSize = WRLDTileSize + (cellPadding * 2);
+
+    int bgWidth = (cellMargin * 2) + cellSize;
+    int bgHeight = (cellSize * cellCount) + (cellMargin * cellCount) + cellMargin;
+
+    int bgX = WINDOW_WIDTH - bgWidth - 20;
+    int bgY = WINDOW_HEIGHT/2 - bgHeight/2;
+
+    for (int i = 0; i < cellCount; i++) {
+        if (HOTBAR_SELECTED == i) {
+            DrawRectangleRounded(
+                (Rectangle){
+                    bgX + cellMargin - 3,
+                    bgY + (i * cellSize) + (i * cellMargin) + cellMargin - 3,
+                    cellSize + 6, cellSize + 6
+                },
+                0.2, 9, (Color){128, 128, 128, 128}
+            );
+        } else {
+            DrawRectangleRounded(
+                (Rectangle){
+                    bgX + cellMargin,
+                    bgY + (i * cellSize) + (i * cellMargin) + cellMargin,
+                    cellSize, cellSize
+                },
+                0.2, 9, (Color){64, 64, 64, 128}
+            );
+        }
+        if (HOTBAR_BLOCKS[i].blockId != 0) {
+            drawBlock(
+                HOTBAR_BLOCKS[i],
+                bgX + cellMargin + cellPadding,
+                bgY + (i * cellSize) + (i * cellMargin) + cellMargin + cellPadding
             );
         }
     }
