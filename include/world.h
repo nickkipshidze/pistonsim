@@ -12,6 +12,19 @@ extern float WRLDLastTick;
 extern float WRLDTickRate;
 extern bool WRLDTickPaused;
 
+struct Stack {
+    int top;
+    int *elements;
+};
+
+extern struct Stack WRLDEventStack;
+
+void stackPrint(struct Stack *stack);
+void stackPush(struct Stack *stack, int element);
+int stackPop(struct Stack *stack);
+
+void pushSurrBlocks(struct Block *world, int x, int y);
+
 void initWorld(struct Block **world);
 void printWorld(struct Block *world);
 void tickWorld(struct Block *world);
