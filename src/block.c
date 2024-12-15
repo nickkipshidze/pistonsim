@@ -64,6 +64,8 @@ int setBitRange(int byte, int startIndex, int endIndex, int value) {
 
 void setBlock(struct Block *world, int x, int y, struct Block block) {
     world[y*WRLDWidth+x] = block;
+    stackPush(&WRLDEventStack, y*WRLDWidth+x);
+    pushSurrBlocks(world, x, y);
 }
 
 struct Block *getBlock(struct Block *world, int x, int y) {
