@@ -72,7 +72,7 @@ void getInteractionInput(struct Block *world, Camera2D camera) {
     if (hoveridx != -1) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
             if (world[hoveridx].blockId == BLOCK_ID_AIR)
-                world[hoveridx] = HOTBAR_BLOCKS[HOTBAR_SELECTED];
+                setBlock(world, hoveridx % WRLDWidth, hoveridx / WRLDWidth, HOTBAR_BLOCKS[HOTBAR_SELECTED]);
             else if (world[hoveridx].blockId == BLOCK_ID_REPEATER && IsKeyDown(KEY_LEFT_SHIFT)) {
                 if (getBit(world[hoveridx].state, 11)) {
                     world[hoveridx].state = setBit(world[hoveridx].state, 11, 0); world[hoveridx].state = setBit(world[hoveridx].state, 10, 1);
@@ -90,7 +90,7 @@ void getInteractionInput(struct Block *world, Camera2D camera) {
                 }
             }
         else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-            world[hoveridx] = (struct Block){BLOCK_ID_AIR};
+            setBlock(world, hoveridx % WRLDWidth, hoveridx / WRLDWidth, (struct Block){BLOCK_ID_AIR});
     }
 }
 
