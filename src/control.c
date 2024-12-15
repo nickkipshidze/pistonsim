@@ -44,16 +44,23 @@ void updateCamera(Camera2D *camera) {
         8
     );
 
-    CAMERA_POS_X += -GetMouseWheelMoveV().x * (2500 + (1000 / camera -> zoom)) * GetFrameTime();
-    CAMERA_POS_Y += -GetMouseWheelMoveV().y * (2500 + (1000 / camera -> zoom)) * GetFrameTime();
-
-    if (IsKeyDown(KEY_LEFT_CONTROL) == true) {
+    if (IsKeyDown(KEY_LEFT_CONTROL)) {
         if (IsKeyDown(KEY_EQUAL))
             camera -> zoom += camera -> zoom * 0.9 * GetFrameTime();
         if (IsKeyDown(KEY_MINUS))
             camera -> zoom -= camera -> zoom * 0.9 * GetFrameTime();
         
+        camera -> zoom += camera -> zoom * GetMouseWheelMove() * 50 * GetFrameTime();
+        
         if (camera -> zoom > 4) camera -> zoom = 4;
+        if (camera -> zoom < 0.1) camera -> zoom = 0.1;
+    } else {
+        if (IsKeyDown(KEY_LEFT_SHIFT)) {
+            CAMERA_POS_X += -GetMouseWheelMoveV().y * (2500 + (1000 / camera -> zoom)) * GetFrameTime();
+        } else {
+            CAMERA_POS_X += -GetMouseWheelMoveV().x * (2500 + (1000 / camera -> zoom)) * GetFrameTime();
+            CAMERA_POS_Y += -GetMouseWheelMoveV().y * (2500 + (1000 / camera -> zoom)) * GetFrameTime();
+        }
     }
 }
 
@@ -83,10 +90,12 @@ void getInteractionInput(struct Block *world, Camera2D camera) {
                 } else if (getBit(world[hoveridx].state, 8)) {
                     world[hoveridx].state = setBit(world[hoveridx].state, 8, 0); world[hoveridx].state = setBit(world[hoveridx].state, 11, 1);
                 } 
+                stackPush(&WRLDEventStack, hoveridx);
             } else {
                 if (world[hoveridx].blockId == BLOCK_ID_SWITCH) {
                     world[hoveridx].active = !world[hoveridx].active;
                     world[hoveridx].data = 0;
+                    stackPush(&WRLDEventStack, hoveridx);
                 }
             }
         else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
